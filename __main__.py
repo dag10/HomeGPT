@@ -3,7 +3,6 @@ import json
 import sys
 import os
 import openai
-import wandb
 from string import Template
 
 
