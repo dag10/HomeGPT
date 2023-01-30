@@ -7,26 +7,37 @@ import wandb
 from string import Template
 
 
+config = dict()
+
 simulated_queries = dict(
-        sim1=('Turn on the hallway light',
-              '[{"response":"Turning on the Hallway Light."},{"service":"light.turn_on","data":{},"target":{"entity_id":["light.hallway_light"]}}]'),
-        sim2=('Turn off the hallway light',
-              '[{"response":"Turning off the Hallway Light."},{"service":"light.turn_off","data":{},"target":{"entity_id":["light.hallway_light"]}}]'),
+        sim_on=('Turn on the island light',
+                '[{"response":"Turning on the Island Light."},{"service":"light.turn_on","data":{"entity_id":["light.island_lights"]}}]'),
+        sim_off=('Turn off the island light',
+                 '[{"response":"Turning off the Island Light."},{"service":"light.turn_off","data":{"entity_id":["light.island_lights"]}}]'),
+        sim_pink=('Turn the island light pink',
+                  '[{"response":"Setting the island light to pink."},{"service":"light.turn_on","data":{"entity_id":["light.island_lights"],"color_name":"pink"}}]'),
+        sim_lime=('Turn the island light lime',
+                  '[{"response":"Setting the island light to lime."},{"service":"light.turn_on","data":{"entity_id":["light.island_lights"],"color_name":"lime"}}]'),
+        sim_err1=('Generate an invalid service call',
+                  '[{"service":"light.foobar","data":{"entity_id":["light.island_lights"],"color_name":"lime"}}]'),
+        sim_err2=('Generate an invalid service call',
+                  '[{"service":"light.turn_on","data":{}}]'),
         )
 simulated_query = None
 
 
 def load_config_or_exit():
     """Loads config.json."""
+    global config
 
     try:
         config_file = open('config.json', 'r')
-        config_data = json.load(config_file)
+        config = json.load(config_file)
         config_file.close()
         # Access some values to throw exceptions if not found
-        config_data['home_assistant_token']
-        config_data['openai_api_key']
-        return config_data
+        config['home_assistant_url']
+        config['home_assistant_token']
+        config['openai_api_key']
     except FileNotFoundError:
         print("Copy config.example.json to config.json and complete it.", file=sys.stderr)
         exit(1)
@@ -112,16 +123,39 @@ def tell_user(text, error=False):
     """Tell the user some arbitrary plain text in response to something."""
 
     file = sys.stderr if error else sys.stdout
+    print()
     print("HomeGPT says: " + text, file=file)
 
 
-def execute_service(service, data, target):
+def execute_service(domain_and_service, data):
     """Call a Home Assistant service."""
 
-    print("Calling Home Assistant service: " + str(dict(service=service,
-                                                        data=data,
-                                                        target=target)))
-    # TODO: Call HA service
+    (domain, service) = domain_and_service.split('.')
+
+    print()
+    print_sep(" Calling service %s.%s " % (domain, service))
+    print(data)
+    print_sep()
+
+    url = ('%s/api/services/%s/%s' % (config['home_assistant_url'], domain, service))
+    auth_token = 'Bearer %s' % config['home_assistant_token']
+
+    headers = {
+            'Authorization': auth_token,
+            'Content-Type': 'application/json'
+            }
+    body = data
+
+    response = requests.post(url, headers=headers, json=body)
+
+    if response.status_code != 200:
+        tell_user("Failed to call service %s.%s, got status code %s" % (domain, service, response.status_code),
+                  error=True)
+        return
+
+    #print_sep(" Service call response (%s) " % response.status_code)
+    #print(response.json())
+    #print_sep()
 
 
 def handle_raw_gpt_response(raw_response):
@@ -134,10 +168,10 @@ def handle_raw_gpt_response(raw_response):
                   error=True)
         return "[]"
 
-    print_sep(' Unparsed response text ')
-    print(response_text)
-    print_sep()
-    print()
+    #print_sep(' GPT response text (unparsed) ')
+    #print(response_text)
+    #print_sep()
+    #print()
 
     try:
         response_json = json.loads(response_text)
@@ -154,6 +188,8 @@ def handle_raw_gpt_response(raw_response):
     for response_obj in response_json:
         handle_gpt_response_obj(response_obj)
 
+    print()
+
     return response_text
 
 
@@ -165,17 +201,16 @@ def handle_gpt_response_obj(response):
     if 'service' in response:
         try:
             service = response['service']
-            data = response['data'] if 'data' in response else dict()
-            target = response['target']
+            data = response['data']
         except Exception as e:
             tell_user("Response contained a malformed service call: %s" % str(e),
                   error=True)
             return
-        execute_service(service, data, target)
+        execute_service(service, data)
 
 
 if __name__ == '__main__':
-    config = load_config_or_exit()
+    load_config_or_exit()
     base_prompt = load_prompt_or_exit()
     cumulative_prompt = finish_initial_prompt(base_prompt)
 

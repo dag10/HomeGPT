@@ -1,4 +1,5 @@
 {
+  "home_assistant_url": "http://homeassistant.local:8123",
   "home_assistant_token": "",
   "openai_api_key": ""
 }

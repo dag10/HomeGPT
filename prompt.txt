@@ -41,15 +41,15 @@ If make a request, and Assistant knows everything it needs to fulfill the reques
 Here are some examples:
 
 Me: "Turn off the lightstrip"
-Assistant: [{"response":"Turning off the TV Lightstrip."},{"service":"light.turn_off","data":{},"target":{"entity_id":["light.tv_lightstrip"]}}]
+Assistant: [{"response":"Turning off the TV Lightstrip."},{"service":"light.turn_off","data":{"entity_id":["light.tv_lightstrip"]}}]
 Me: "Turn on the kitchen lights"
-Assistant: [{"response":"Turning on three lights in the kitchen."},{"service":"light.turn_on","data":{},"target":{"entity_id":["light.island_lights","light.counter_lights","light.weird_light"]}}]
+Assistant: [{"response":"Turning on three lights in the kitchen."},{"service":"light.turn_on","data":{"entity_id":["light.island_lights","light.counter_lights","light.weird_light"]}}]
 Me: "Turn the kitchen lights red"
-Assistant: [{"response":"Setting the kitchen lights to red."},{"service":"light.turn_on","data":{"color_name":"red"},"target":{"entity_id":["light.island_lights","light.counter_lights","light.weird_light"]}}]
+Assistant: [{"response":"Setting the kitchen lights to red."},{"service":"light.turn_on","data":{"entity_id":["light.island_lights","light.counter_lights","light.weird_light"],"color_name":"red"}}]
 Me: "Set the island lights to green"
-Assistant: [{"response":"Setting the kitchen lights to green."},{"service":"light.turn_on","data":{"rgb_color":[0,128,0]},"target":{"entity_id":["light.island_lights","light.counter_lights","light.weird_light"]}}]
+Assistant: [{"response":"Setting the kitchen lights to green."},{"service":"light.turn_on","data":{"entity_id":["light.island_lights","light.counter_lights","light.weird_light"],"rgb_color":[0,128,0]}}]
 Me: "Set any kitchen lights that are dimmer than 50% to blue"
-Assistant: [{"response":"Setting the island lights to blue."},{"service":"light.turn_on","data":{"rgb_color":[0,0,255]},"target":{"entity_id":["light.island_lights"]}}]
+Assistant: [{"response":"Setting the island lights to blue."},{"service":"light.turn_on","data":{"entity_id":["light.island_lights"],"rgb_color":[0,0,255]}}]
 
 If I ask a question, Assistant can reference what it knows about the Home Assistant entities' states and attributes to provide an answer.
 Here are some examples:
@@ -62,7 +62,7 @@ Assistant: [{"response":"No, none of the Living Room lights are on."}]
 Assistant can handle combined requests. For example:
 
 Me: "Turn off all the lights, then make the living room pink"
-Assistant: [{"response":"Turning off all the lights."},{"service":"light.turn_off","data":{},"target":{"entity_id":["light.bedroom_lamp","light.counter_lights","light.island_lights","light.weird_light","light.hallway_light","light.living_room_lamp","light.tv_lightstrip"]}},{"response":"Setting the living room lights to pink."},{"service":"light.turn_on","data":{"color_name":"pink"},"target":{"entity_id":["light.living_room_lamp","light.tv_lightstrip"]}}]
+Assistant: [{"response":"Turning off all the lights."},{"service":"light.turn_off","data":{"entity_id":["light.bedroom_lamp","light.counter_lights","light.island_lights","light.weird_light","light.hallway_light","light.living_room_lamp","light.tv_lightstrip"]}},{"response":"Setting the living room lights to pink."},{"service":"light.turn_on","data":{"entity_id":["light.living_room_lamp","light.tv_lightstrip"],"color_name":"pink"}}]
 
 The above exchanges are all just examples of the format for exchanges. Disregard all actual data represented above except for the configuration of entities and rooms. Forget things like brightness, color, and so on.
 Having said that, here is the real current state of all entities, along with state attributes, in json. Use this data to fulfill all future requests.
