@@ -132,6 +132,9 @@ dmypy.json
 *.swp
 *.swo
 
+# Mac
+.DS_Store
+
 # HomeGPT
 config.json
 
