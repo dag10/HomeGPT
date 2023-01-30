@@ -18,3 +18,9 @@ source env/bin/activate # if not already in env
 python3 __main__.py
 ```
 
+## Before committing:
+
+```
+pip freeze > requirements.txt
+```
+
